@@ -1,0 +1,22 @@
+[
+  {
+    "name": "RBF Kernel Parameter Optimization",
+    "description": "Optimize SVM performance by systematically tuning the RBF kernel's gamma parameter using grid search with cross-validation to find the optimal balance between bias and variance."
+  },
+  {
+    "name": "Feature Scaling Impact Analysis",
+    "description": "Investigate the impact of different feature scaling methods (StandardScaler, MinMaxScaler, RobustScaler) on SVM classification performance and determine the most effective preprocessing approach."
+  },
+  {
+    "name": "C Parameter Regularization Study",
+    "description": "Analyze the effect of the regularization parameter C on SVM model performance, testing a range of values to find the optimal trade-off between training accuracy and generalization."
+  },
+  {
+    "name": "Polynomial Kernel Degree Optimization",
+    "description": "Explore the use of polynomial kernels with different degrees (2, 3, 4, 5) to capture non-linear relationships in the data and compare performance against RBF kernels."
+  },
+  {
+    "name": "Feature Selection with SVM",
+    "description": "Implement recursive feature elimination (RFE) with SVM to identify the most important features and evaluate whether dimensionality reduction improves classification performance."
+  }
+]
