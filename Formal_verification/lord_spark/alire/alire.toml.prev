@@ -1,0 +1,11 @@
+name = "lord_spark"
+description = ""
+version = "0.1.0-dev"
+
+authors = ["Karen Sargsyan"]
+maintainers = ["Karen Sargsyan <example@example.com>"]
+licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
+website = ""
+tags = []
+
+executables = ["lord_spark"]
