@@ -1,0 +1,46 @@
+name: SPARK Verification
+
+on:
+  push:
+    paths:
+      - 'Formal_verification/lord_spark/**'
+      - '.github/workflows/spark-verify.yml'
+  pull_request:
+    paths:
+      - 'Formal_verification/lord_spark/**'
+      - '.github/workflows/spark-verify.yml'
+
+jobs:
+  verify:
+    name: Verify SPARK/Ada proofs with GNATprove
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Alire (Ada package manager)
+        uses: alire-project/setup-alire@v3
+
+      - name: Select GNAT and GPRbuild toolchain
+        run: alr toolchain --select gnat_native gprbuild
+
+      - name: Cache Alire dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.config/alire
+            ~/.local/share/alire
+          key: alire-spark-${{ hashFiles('Formal_verification/lord_spark/alire.toml') }}
+          restore-keys: |
+            alire-spark-
+
+      - name: Fetch dependencies (including GNATprove)
+        working-directory: Formal_verification/lord_spark
+        run: alr update
+
+      - name: Run GNATprove
+        working-directory: Formal_verification/lord_spark
+        run: alr exec -- gnatprove -P lord_spark.gpr
