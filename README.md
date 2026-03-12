@@ -1,6 +1,7 @@
 # ai-scientist-guards
 
 [![Lean 4 Verification](https://github.com/karsar/ai-scientist-guards/actions/workflows/lean4-verify.yml/badge.svg)](https://github.com/karsar/ai-scientist-guards/actions/workflows/lean4-verify.yml)
+[![SPARK Verification](https://github.com/karsar/ai-scientist-guards/actions/workflows/spark-verify.yml/badge.svg)](https://github.com/karsar/ai-scientist-guards/actions/workflows/spark-verify.yml)
 
 Replication code for **"Structural Enforcement of Statistical Rigor in AI-Driven Discovery: A Functional Architecture"**
 
