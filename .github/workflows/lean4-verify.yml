@@ -1,0 +1,50 @@
+name: Lean 4 Verification
+
+on:
+  push:
+    paths:
+      - 'Formal_verification/lord_fdr_lean/**'
+      - '.github/workflows/lean4-verify.yml'
+  pull_request:
+    paths:
+      - 'Formal_verification/lord_fdr_lean/**'
+      - '.github/workflows/lean4-verify.yml'
+
+jobs:
+  verify:
+    name: Build and verify Lean 4 proofs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install elan (Lean version manager)
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Set up Lean toolchain
+        working-directory: Formal_verification/lord_fdr_lean
+        run: elan toolchain install "$(cat lean-toolchain)"
+
+      - name: Cache Mathlib build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            Formal_verification/lord_fdr_lean/.lake/packages/mathlib/.lake/build
+            ~/.elan
+          key: lean4-mathlib-${{ hashFiles('Formal_verification/lord_fdr_lean/lean-toolchain', 'Formal_verification/lord_fdr_lean/lakefile.lean', 'Formal_verification/lord_fdr_lean/lake-manifest.json') }}
+          restore-keys: |
+            lean4-mathlib-
+
+      - name: Download Mathlib cache
+        working-directory: Formal_verification/lord_fdr_lean
+        run: lake exe cache get || echo "Cache download failed or unavailable; proceeding with a full build from source."
+
+      - name: Build and verify proofs
+        working-directory: Formal_verification/lord_fdr_lean
+        run: lake build
