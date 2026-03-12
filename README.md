@@ -1,5 +1,7 @@
 # ai-scientist-guards
 
+[![Lean 4 Verification](https://github.com/karsar/ai-scientist-guards/actions/workflows/lean4-verify.yml/badge.svg)](https://github.com/karsar/ai-scientist-guards/actions/workflows/lean4-verify.yml)
+
 Replication code for **"Structural Enforcement of Statistical Rigor in AI-Driven Discovery: A Functional Architecture"**
 
 This repository contains the Haskell implementation of the Research monad and declarative scaffolding system that enforces FDR control in AI-driven scientific discovery, as well as complete formal proofs for online FDR control in Lean and additional SPARK-based verification of correctness for the transition from real numbers to double-precision floats.
