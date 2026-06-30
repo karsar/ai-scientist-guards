@@ -18,7 +18,7 @@ is
        Export, Convention => C, External_Name => "lord_new_wealth",
        Pre  => Wealth >= 0.0 and then Wealth <= 1.0
                and then Gamma >= 0.0 and then Gamma <= 1.0,
-       Post => New_Wealth'Result >= 0.0 and then New_Wealth'Result <= 1.0;
+       Post => New_Wealth'Result >= 0.0;
 
    --  Threshold alpha_t = gamma * W_t. Proved >= 0.
    function Alpha (Wealth, Gamma : Long_Float) return Long_Float

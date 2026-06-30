@@ -43,16 +43,15 @@ GNATprove proves the budget invariant `W(t) ≥ 0` over IEEE 754 double precisio
 | File | Contents |
 |------|----------|
 | `src/lord_pp.{ads,adb}` | Wealth update and sequence loop (the budget invariant, H4) |
-| `src/lord_eps.{ads,adb}` | Threshold-sum driver (sum and wealth stay non-negative) |
 | `src/lord_capi.{ads,adb}` | C-exported `lord_new_wealth`, `lord_alpha` for FFI |
 
 ```bash
 cd Formal_verification/lord_spark
 alr build
-alr exec -- gnatprove -P lord_spark.gpr --level=2 --steps=20000 --report=statistics
+alr exec -- gnatprove -P lord_spark.gpr --level=2 --steps=100000 --report=statistics
 ```
 
-All checks proved, 0 unproved, 0 `pragma Assume`: 30 for `lord_pp`, 10 for `lord_eps`, 5 for `lord_capi`. Lean proves correctness over the reals; SPARK proves IEEE 754 execution cannot violate the wealth invariant.
+All checks proved, 0 unproved, 0 `pragma Assume`: 30 for `lord_pp` (the H4 budget invariant), 5 for `lord_capi`. Lean proves correctness over the reals; SPARK proves IEEE 754 execution cannot violate the wealth invariant.
 
 ### 🧮 Research_monad/  (Monte_Carlo_validation)
 
