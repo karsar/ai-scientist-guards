@@ -46,7 +46,7 @@ def run_experiment(out_dir, phase):
         data_file = "../data/wine_exploration.csv"
     elif phase == "validation":
         random_state = VALIDATION_SEED
-        data_file = "../data/wine_validation.csv"
+        data_file = "../data/wine_validation_H1.csv"
     else:
         raise ValueError(f"Unknown phase: {phase}")
 

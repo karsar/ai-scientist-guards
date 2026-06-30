@@ -37,8 +37,8 @@ data DataContract = DataContract {
     validationDataPath :: FilePath
 } deriving (Show, Eq)
 
-data StatisticalTestSpec = 
-    PairedTTest { repetitions :: Int, folds :: Int }
+data StatisticalTestSpec =
+    PermutationTest { permutations :: Int }
     | SimulationOnly
     deriving (Show, Eq)
 
@@ -75,10 +75,10 @@ assembleHypothesis hIdVal idea = do
     -- NOTE: Ensure these data files exist in your project structure relative to the execution path.
     let contract = DataContract {
             explorationDataPath = "data/wine_exploration.csv",
-            validationDataPath = "data/wine_validation.csv"
+            validationDataPath = "data/wine_validation_H1.csv"  -- vestigial; harness selects the per-hypothesis disjoint split
         }
     -- Define the required statistical test
-    let testSpec = PairedTTest { repetitions = 3, folds = 10 }
+    let testSpec = PermutationTest { permutations = 20000 }
 
     return Hypothesis {
         hId = hIdVal,

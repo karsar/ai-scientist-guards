@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+data_synth/
+results/llm/
+results/isolation/
+results/run_*.log

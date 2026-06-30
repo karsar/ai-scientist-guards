@@ -43,4 +43,6 @@ jobs:
 
       - name: Run GNATprove
         working-directory: Formal_verification/lord_spark
-        run: alr exec -- gnatprove -P lord_spark.gpr
+        # --steps is deterministic (machine-independent), so proof success does
+        # not depend on the CI runner's speed, unlike a wall-clock --timeout.
+        run: alr exec -- gnatprove -P lord_spark.gpr --level=2 --steps=20000 --report=fail

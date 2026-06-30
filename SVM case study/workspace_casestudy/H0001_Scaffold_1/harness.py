@@ -2,94 +2,82 @@
 import implementation
 import pandas as pd
 import numpy as np
-from scipy import stats
 import sys, os
 
-# === Data Contract Enforcement ===
-EXPLORATION_DATA_PATH = "/home/karsar/ai-scientist-case-study/data/wine_exploration.csv"
-VALIDATION_DATA_PATH = "/home/karsar/ai-scientist-case-study/data/wine_validation.csv"
+HYP_ID = 1  # this hypothesis's disjoint validation split (H3)
 
-# Load data within the harness to ensure separation
+# === Locate the data directory portably (walk up from this file) ===
+def _find_data_dir():
+    d = os.path.dirname(os.path.abspath(__file__))
+    for _ in range(6):
+        cand = os.path.join(d, "data")
+        if os.path.exists(os.path.join(cand, "wine_exploration.csv")):
+            return cand
+        d = os.path.dirname(d)
+    print("Error: data/ with wine_exploration.csv not found"); sys.exit(1)
+
+DATA_DIR = _find_data_dir()
+EXPLORATION_DATA_PATH = os.path.join(DATA_DIR, "wine_exploration.csv")
+VALIDATION_DATA_PATH = os.path.join(DATA_DIR, f"wine_validation_H{HYP_ID}.csv")
+
 def load_data(path):
     try:
         return pd.read_csv(path)
     except FileNotFoundError as e:
-        print(f"Error loading data: {e}. Check path: {path}")
-        sys.exit(1)
+        print(f"Error loading data: {e}. Check path: {path}"); sys.exit(1)
 
-# === Statistical Test Implementation (Verified Standardized Methodology) ===
-N_REPEATS = 3
-N_FOLDS = 10
-from sklearn.model_selection import RepeatedKFold
+# === Statistical test: paired sign-flip permutation on held-out
+# === per-example losses (super-uniform nulls, H1) ===
+N_PERM = 20000
+from sklearn.base import clone
 
-def execute_paired_ttest(data, artifact, baseline_artifact):
-    print(f"Executing Paired T-Test ({N_REPEATS} repeats, {N_FOLDS} folds)")
-    # Fixed random state for reproducibility of the validation test
-    rkf = RepeatedKFold(n_splits=N_FOLDS, n_repeats=N_REPEATS, random_state=42)
+def _per_example_loss(model, X, y):
+    return (model.predict(X) != y).astype(float)
 
-    scores_A = []
-    scores_B = []
-
-    # Assuming 'target' column is the label. This might need generalization.
-    if 'target' not in data.columns:
-        print("Error: 'target' column not found in validation data.")
-        sys.exit(1)
-    X = data.drop('target', axis=1)
-    y = data['target']
-
-    for train_index, test_index in rkf.split(X):
-        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
-        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-
-        # LLM Implementation provides the evaluation logic for a single fold
-        score_A = implementation.evaluate_model(artifact, X_train, y_train, X_test, y_test)
-        score_B = implementation.evaluate_model(baseline_artifact, X_train, y_train, X_test, y_test)
-
-        scores_A.append(score_A)
-        scores_B.append(score_B)
-
-    # Perform the actual t-test using scipy
-    if np.all(np.array(scores_A) == np.array(scores_B)):
-        return 1.0 # If scores are identical, no significant difference
-
-    t_stat, p_value = stats.ttest_rel(scores_A, scores_B)
-
-    # We use a one-sided test (Optimized > Baseline)
-    if np.mean(scores_A) <= np.mean(scores_B):
-        # If mean is not better, p-value is high (not significant in the desired direction)
+def permutation_pvalue(optimized, baseline, expl, val, seed=0):
+    # optimized is already fit on exploration; fit a fresh baseline on the same data.
+    Xe, ye = expl.drop('target', axis=1).values, expl['target'].values
+    Xv, yv = val.drop('target', axis=1).values, val['target'].values
+    # Fit fresh clones of both on exploration (robust whether or not
+    # optimize() already returned a fitted estimator).
+    opt = clone(optimized); opt.fit(Xe, ye)
+    base = clone(baseline); base.fit(Xe, ye)
+    loss_opt = _per_example_loss(opt, Xv, yv)
+    loss_base = _per_example_loss(base, Xv, yv)
+    d = loss_base - loss_opt            # > 0 favors the optimized model
+    n = d.shape[0]; obs = float(d.sum())
+    if n == 0:
         return 1.0
-    else:
-        # For a one-sided test (A > B), we divide the two-sided p-value by 2.
-        return p_value / 2.0
-
+    rng = np.random.default_rng(seed)
+    if n <= 22:                          # exact enumeration of sign flips
+        idx = np.arange(1 << n)
+        signs = ((idx[:, None] >> np.arange(n)) & 1).astype(float) * 2.0 - 1.0
+        return float(np.mean(signs @ d >= obs - 1e-12))
+    count, drawn = 0, 0                  # Monte-Carlo with +1/+1 correction
+    while drawn < N_PERM:
+        b = min(4096, N_PERM - drawn)
+        flips = rng.integers(0, 2, size=(b, n)).astype(float) * 2.0 - 1.0
+        count += int(np.sum(flips @ d >= obs - 1e-12))
+        drawn += b
+    return float((count + 1) / (N_PERM + 1))
 
 # === Execution Phases ===
 def run_exploration():
     print("--- Harness: Running Exploration Phase ---")
     data = load_data(EXPLORATION_DATA_PATH)
-    # CRITICAL: Only exploration data is passed to the LLM-generated code.
-    # We pass a copy to prevent accidental modification of the master data.
+    # Only exploration data is passed to the LLM-generated code.
     artifact = implementation.optimize(data.copy())
     return artifact
 
-def run_validation(artifact, baseline_artifact):
-    print("--- Harness: Running Validation Phase ---")
-    data = load_data(VALIDATION_DATA_PATH)
-    # Use the harness-defined statistical test.
-    p_value = execute_paired_ttest(data.copy(), artifact, baseline_artifact)
-    return p_value
+def run_validation(optimized, baseline):
+    print(f"--- Harness: Validation on disjoint split H{HYP_ID} ---")
+    expl = load_data(EXPLORATION_DATA_PATH)
+    val = load_data(VALIDATION_DATA_PATH)
+    return permutation_pvalue(optimized, baseline, expl, val)
 
-# === Main Execution Flow ===
-# The harness executes the full cycle: Exploration -> Validation
+# === Main Execution Flow: Exploration -> Validation ===
 if __name__ == "__main__":
-    # 1. Baseline Definition (LLM provides this via refactoring)
     baseline_artifact = implementation.get_baseline()
-
-    # 2. Exploration Phase (LLM Optimization/Refactoring)
     optimized_artifact = run_exploration()
-
-    # 3. Validation Phase (Statistical Test)
     p_value = run_validation(optimized_artifact, baseline_artifact)
-
-    # Output the P-value for the orchestrator to capture
     print(f"FINAL_P_VALUE:{p_value}")

@@ -1,44 +1,58 @@
-# Script to create the wine dataset CSV files required by the harness
-import pandas as pd
-import numpy as np
-from sklearn.datasets import load_wine
-from sklearn.model_selection import train_test_split
+# Create the wine dataset CSVs for the case study: one shared exploration split
+# and DISJOINT per-hypothesis validation splits (condition H3). Each hypothesis
+# is scored only on its own split, so its p-value is independent of the others'.
+import json
 import os
 
-def create_wine_csv_files():
-    """Create exploration and validation CSV files from the wine dataset"""
-    
-    # Load wine dataset (same as baseline)
-    X, y = load_wine(return_X_y=True)
-    
-    # Get feature names
-    wine_data = load_wine()
-    feature_names = wine_data.feature_names
-    
-    # Create DataFrame with proper column names
-    df = pd.DataFrame(X, columns=feature_names)
-    df['target'] = y
-    
-    # Split into exploration (60%) and validation (40%) with stratification
-    exploration_df, validation_df = train_test_split(
-        df, 
-        test_size=0.4, 
-        random_state=42, 
-        stratify=y
-    )
-    
-    # Create data directory
-    os.makedirs('data', exist_ok=True)
-    
-    # Save to CSV files
-    exploration_df.to_csv('data/wine_exploration.csv', index=False)
-    validation_df.to_csv('data/wine_validation.csv', index=False)
-    
-    print(f"Created exploration dataset: {exploration_df.shape} -> data/wine_exploration.csv")
-    print(f"Created validation dataset: {validation_df.shape} -> data/wine_validation.csv")
-    print(f"Features: {list(feature_names)}")
-    print(f"Target classes: {sorted(df['target'].unique())}")
+import numpy as np
+import pandas as pd
+from sklearn.datasets import load_wine
+from sklearn.model_selection import train_test_split
+
+N_HYPOTHESES = 5
+SEED = 42
+
+
+def create_wine_csv_files(n_hyp: int = N_HYPOTHESES, seed: int = SEED) -> None:
+    wine = load_wine()
+    df = pd.DataFrame(wine.data, columns=wine.feature_names)
+    df["target"] = wine.target
+
+    # Exploration split (handed to optimize()) vs. a validation pool the harness
+    # partitions into disjoint per-hypothesis blocks.
+    explore_df, valpool_df = train_test_split(
+        df, test_size=0.6, random_state=seed, stratify=df["target"])
+
+    os.makedirs("data", exist_ok=True)
+    explore_df.to_csv("data/wine_exploration.csv", index=False)
+
+    # Stratified, disjoint partition of the validation pool into n_hyp blocks.
+    rng = np.random.default_rng(seed)
+    assigned: dict = {}
+    for _, grp in valpool_df.groupby("target"):
+        idx = grp.index.to_numpy()
+        rng.shuffle(idx)
+        for k, chunk in enumerate(np.array_split(idx, n_hyp)):
+            assigned.setdefault(k, []).extend(chunk.tolist())
+
+    manifest = {"n_hyp": n_hyp, "seed": seed, "splits": {}}
+    for k in range(n_hyp):
+        rows = valpool_df.loc[assigned[k]].sort_index()
+        path = f"data/wine_validation_H{k + 1}.csv"
+        rows.to_csv(path, index=False)
+        manifest["splits"][f"H{k + 1}"] = {"path": path, "n_rows": int(rows.shape[0])}
+
+    # Sanity: the splits are pairwise disjoint and cover the pool exactly once.
+    all_ids = sum(assigned.values(), [])
+    assert len(all_ids) == len(set(all_ids)), "validation splits overlap!"
+    with open("data/splits_manifest.json", "w") as f:
+        json.dump(manifest, f, indent=2)
+
+    print(f"exploration: {explore_df.shape[0]} rows -> data/wine_exploration.csv")
+    for name, s in manifest["splits"].items():
+        print(f"  {name}: {s['n_rows']:>3} rows -> {s['path']}")
+    print("validation splits are disjoint and cover the pool (H3).")
+
 
 if __name__ == "__main__":
     create_wine_csv_files()
-
