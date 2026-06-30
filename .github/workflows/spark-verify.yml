@@ -23,6 +23,11 @@ jobs:
 
       - name: Set up Alire (Ada package manager)
         uses: alire-project/setup-alire@v3
+        with:
+          # alr 2.0.1 cannot resolve the gnatprove binary crate's per-arch
+          # origin (Host_Arch case-expression), reporting it missing:unavailable.
+          # 2.1.0 resolves and downloads it.
+          version: 2.1.0
 
       - name: Select GNAT and GPRbuild toolchain
         run: alr toolchain --select gnat_native gprbuild
@@ -33,9 +38,11 @@ jobs:
           path: |
             ~/.config/alire
             ~/.local/share/alire
-          key: alire-spark-${{ hashFiles('Formal_verification/lord_spark/alire.toml') }}
+          # Cache key includes the alr version: the previous alr-2.0.1 cache
+          # holds an incomplete (gnatprove-less) solution that must not be reused.
+          key: alire-spark-alr210-${{ hashFiles('Formal_verification/lord_spark/alire.toml') }}
           restore-keys: |
-            alire-spark-
+            alire-spark-alr210-
 
       - name: Fetch and provision dependencies (including GNATprove)
         working-directory: Formal_verification/lord_spark
