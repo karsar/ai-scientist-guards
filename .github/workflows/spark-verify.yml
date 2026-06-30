@@ -37,9 +37,14 @@ jobs:
           restore-keys: |
             alire-spark-
 
-      - name: Fetch dependencies (including GNATprove)
+      - name: Fetch and provision dependencies (including GNATprove)
         working-directory: Formal_verification/lord_spark
-        run: alr update
+        # `alr update` only refreshes the index. `alr build` resolves the
+        # solution and downloads the GNATprove binary archive (and its prover
+        # backend) so that `alr exec -- gnatprove` can actually run.
+        run: |
+          alr update
+          alr build
 
       - name: Run GNATprove
         working-directory: Formal_verification/lord_spark
