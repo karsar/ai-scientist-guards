@@ -81,7 +81,7 @@ python case_study_large.py         # moons: valid pipeline discovers real effect
 
 ### 🔁 FFI/
 
-The Haskell orchestrator calls the GNATprove-verified wealth update directly via the C ABI, rather than re-implementing it.
+A Haskell harness drives the GNATprove-verified wealth update directly via the C ABI, demonstrating that the proved arithmetic can be called from Haskell rather than re-implemented. (The simulation and case-study drivers compute thresholds with the closed-form LORD++ update in `Lord.hs`; this harness shows the verified kernel is a drop-in for the multiplicative wealth step.)
 
 ```bash
 cd FFI
