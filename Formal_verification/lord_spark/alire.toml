@@ -11,4 +11,4 @@ tags = []
 executables = ["lord_spark"]
 
 [[depends-on]]
-gnatprove = "^15.1.0"
+gnatprove = "~15.1.0"

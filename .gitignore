@@ -1,0 +1,26 @@
+# Lean
+**/.lake/
+**/*.olean
+**/*.ilean
+
+# SPARK / Ada (build outputs)
+**/obj/
+**/bin/
+**/alire/
+**/*.ali
+**/*.o
+
+# Haskell
+**/dist-newstyle/
+**/*.hi
+
+# Python
+**/__pycache__/
+**/*.pyc
+
+# Archives, generated data, OS / Windows download markers
+*.tar.gz
+*.zip
+**/data/
+.DS_Store
+*:Zone.Identifier

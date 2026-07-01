@@ -5,85 +5,106 @@
 
 Replication code for **"Structural Enforcement of Statistical Rigor in AI-Driven Discovery: A Functional Architecture"**
 
-This repository contains the Haskell implementation of the Research monad and declarative scaffolding system that enforces FDR control in AI-driven scientific discovery, as well as complete formal proofs for online FDR control in Lean and additional SPARK-based verification of correctness for the transition from real numbers to double-precision floats.
+The repository contains the Haskell `Research` monad and declarative scaffold that enforce online FDR control in AI-driven discovery, the harness that performs the statistical tests, the machine-checked Lean 4 proofs, the SPARK/Ada verification of the floating-point wealth invariant, and the experiments.
 
 ## What's Inside
 
-### 📊 Monte_Carlo_validation/
-Contains code for the **large-scale simulation study** (Experiment 1 in the paper). This validates that:
-- The monadic implementation of LORD++ behaves correctly
-- FDR control is essential at scale (N=2000 hypotheses)
-- The naive approach leads to massive FDR inflation
+### 📐 Formal_verification/
 
-Run this to see the Research monad in action and reproduce results from the paper.
+Machine-checked proofs. Every Lean theorem is `sorry`-free and depends only on the three standard axioms (`propext`, `Classical.choice`, `Quot.sound`).
 
-### 🔬 SVM case study/
-Contains the **end-to-end case study** demonstrating the integrated architecture (Monad + Scaffolding) with real LLM interaction.
+#### `lord_fdr_lean/` — LORD++ in Lean 4
 
-**What's in here:**
-- **`baseline/`** - The initial suboptimal SVM Python code that serves as the starting point
-- **`create_datasets.py`** - Downloads and splits the Wine dataset into exploration/validation sets (saves to `data/` folder)
-- **`prompt.json`** - The base prompt we feed to the LLM to guide code generation
-- **`seed_ideas.json`** - The five optimization hypotheses we test (in a more complete version, the LLM would generate these itself, but we're keeping it simple here)
-- Main orchestration code that ties everything together
-
-This reproduces the workflow from the paper. **Note:** Results will vary slightly due to LLM non-determinism.
-
-### 🔐 Formal_verification/
-Contains **machine-checked proofs** of the core FDR guarantees:
-
-#### `lean4/` — Mathematical Proof
-Lean 4 formalization proving the fundamental lemma underlying FDR control:
-- P-value and predictability definitions using Mathlib
-- Threshold non-negativity
-- Supermartingale property of null discovery process
-- FDR ≤ α guarantee
+| File | Result |
+|------|--------|
+| `LordFDR/FundamentalLemma.lean` | `E[1{P≤α}/α \| F] = 1` for uniform, independent null p-values |
+| `LordFDR/OnlineFDR.lean` | FDR bound from an assumed pathwise budget |
+| `LordFDR/PathwiseBudget.lean` | `lordThreshold_sum_le`: the budget **derived** from Eq. (1), `Σα_t ≤ α·max(R,1)` |
+| `LordFDR/MFDR.lean` | `lord_mfdr`: marginal FDR control for the reward-bearing procedure |
+| `LordFDR/FDR.lean` | `fdr_le`: full `E[V/max(R,1)] ≤ α` via leave-one-out (independent, non-adaptive) |
 
 ```bash
 cd Formal_verification/lord_fdr_lean
-lake exe cache get  # Download Mathlib cache
+lake exe cache get      # download the prebuilt Mathlib cache (avoids a multi-hour build)
 lake build
 ```
 
-#### `spark/` — IEEE 754 Verification  
-SPARK/Ada code proving budget soundness (H4) at the floating-point level:
-- Wealth non-negativity preserved across all steps
-- No overflow possible for bounded inputs
-- 31 verification conditions, all discharged by GNATprove
+Toolchain and dependencies are pinned by `lean-toolchain`, `lakefile.lean`, and `lake-manifest.json`. To audit a theorem's trust base:
 
 ```bash
-cd Formal_verification/spark_lord
-mkdir -p obj
-gnatprove -P lord_spark.gpr --level=2
+echo 'import LordFDR.FDR
+#print axioms LordFDR.FDR.fdr_le' | lake env lean --stdin
 ```
 
-Together, Lean proves correctness in real arithmetic while SPARK proves IEEE 754 execution cannot violate the invariants.
+#### `lord_spark/` — IEEE 754 verification
+
+GNATprove proves the budget invariant `W(t) ≥ 0` over IEEE 754 double precision, under every rounding sequence.
+
+| File | Contents |
+|------|----------|
+| `src/lord_pp.{ads,adb}` | Wealth update and sequence loop (the budget invariant, H4) |
+| `src/lord_capi.{ads,adb}` | C-exported `lord_new_wealth`, `lord_alpha` for FFI |
+
+```bash
+cd Formal_verification/lord_spark
+alr build
+alr exec -- gnatprove -P lord_spark.gpr --level=2 --steps=100000 --report=statistics
+```
+
+All checks proved, 0 unproved, 0 `pragma Assume`: 30 for `lord_pp` (the H4 budget invariant), 5 for `lord_capi`. Lean proves correctness over the reals; SPARK proves IEEE 754 execution cannot violate the wealth invariant.
+
+### 🧮 Research_monad/  (Monte_Carlo_validation)
+
+The Haskell `Research` monad (an `ExceptT`-over-`StateT` stack) makes it impossible to test a hypothesis without updating the statistical state. The Monte Carlo driver reproduces the simulation: a naive approach inflates FDR to ~41%, LORD++ holds it at ~1.1% (N=2000).
+
+```bash
+cd Monte_Carlo_validation
+cabal build && cabal run ai-scientist-validation
+```
+
+### 🧪 Harness/
+
+The harness-controlled statistics and data separation.
+
+- `verified_stats.py` — `paired_permutation_pvalue`: a paired sign-flip permutation test on held-out per-example losses; super-uniform under the null (condition H1).
+- `make_disjoint_splits.py` — disjoint, stratified, pre-assigned per-hypothesis validation splits (independence by construction, condition H3).
+- `harness_disjoint.py` — the generated harness wiring both together.
+
+### 🔬 Experiments/
+
+```bash
+cd Experiments
+python calibration_experiment.py   # H1: permutation super-uniform vs CV t-test anti-conservative
+python case_study_rerun.py         # wine: CV t-test (spurious discoveries) vs permutation (none)
+python case_study_large.py         # moons: valid pipeline discovers real effects, rejects nulls
+```
+
+### 🔁 FFI/
+
+A Haskell harness drives the GNATprove-verified wealth update directly via the C ABI, demonstrating that the proved arithmetic can be called from Haskell rather than re-implemented. (The simulation and case-study drivers compute thresholds with the closed-form LORD++ update in `Lord.hs`; this harness shows the verified kernel is a drop-in for the multiplicative wealth step.)
+
+```bash
+cd FFI
+bash build.sh    # proves lord_capi, compiles it, links it into Haskell, runs
+```
+
+### 🔐 Leakage_experiment/
+
+Adversarial evaluation of the OS-level data-separation boundary (system-call-level leak detection). See `Leakage_experiment/README.md`.
+
+### ⚙️ SVM case study/
+
+The end-to-end SVM/Wine scaffolding workflow with LLM code generation.
 
 ## Dependencies
 
-- **Haskell** (GHC + Stack or Cabal) — for Monte Carlo and case study
-- **Python 3.x** — for case study execution
-- **LLM API** (we used GPT-4o) — for case study
-- **Lean 4 + Mathlib** — for formal proofs
-- **GNAT/SPARK** — for floating-point verification, Monte-Carlo demonstration
-
-## Quick Start
-
-### Monte Carlo Validation
-```bash
-cd Monte_Carlo_validation
-cabal build
-cabal run ai-scientist-validation
-```
-
-### SVM Case Study
-```bash
-cd "SVM case study"
-python create_datasets.py        # Create exploration/validation split
-export OPENAI_API_KEY=...        # Set your API key
-cabal build
-cabal run ai-scientist-case-study
-```
+| Tool | Version |
+|------|---------|
+| Lean / Lake (via `elan`) | pinned by `lean-toolchain` |
+| Mathlib | pinned by `lake-manifest.json` |
+| GNAT / SPARK (via Alire) | `gnatprove` 15.1.x |
+| GHC / Cabal | GHC ≥ 9.6 |
+| Python | ≥ 3.10 with `scikit-learn`, `numpy`, `scipy` |
 
 ## License
 
