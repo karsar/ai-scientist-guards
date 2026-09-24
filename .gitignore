@@ -24,3 +24,8 @@
 **/data/
 .DS_Store
 *:Zone.Identifier
+
+# FFI build outputs
+FFI/eq1_obj/
+FFI/lord_eq1_ffi_check
+FFI/lord_ffi_demo

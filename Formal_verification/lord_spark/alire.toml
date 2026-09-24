@@ -12,3 +12,6 @@ executables = ["lord_spark"]
 
 [[depends-on]]
 gnatprove = "~15.1.0"
+
+[[depends-on]]
+sparklib = "~15.1.0"

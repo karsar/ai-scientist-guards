@@ -31,3 +31,13 @@ executable ai-scientist-validation
     hs-source-dirs:   app
     build-depends:    ai-scientist-validation
     ghc-options:      -threaded -rtsopts -with-rtsopts=-N
+
+-- Reference thresholds for the SPARK Eq. 1 check
+-- (Formal_verification/lord_spark/test).
+executable lord-eq1-reference
+    import:           shared-properties
+    main-is:          Eq1Reference.hs
+    hs-source-dirs:   tools
+    build-depends:    ai-scientist-validation
+                    , vector >=0.12
+                    , mwc-random >=0.15

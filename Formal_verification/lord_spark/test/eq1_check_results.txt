@@ -1,0 +1,56 @@
+Lord_Eq1 agreement check
+========================
+Gamma table (c = 0.07720838), Ada vs Lord.hs, j = 1 .. 2000:
+  bit-identical entries : 2000
+  max |difference|      : 0.00000000000000E+00
+
+Paper tables (SPARK alpha_t, c = 0.07720838 / c = 0.0772):
+
+  table1:  27e-5*  247e-5  57e-5*  290e-5  93e-5
+  table4_perm:  134e-5  29e-5  25e-5  21e-5  17e-5
+  table4_cv:  134e-5  29e-5*  159e-5*  183e-5  71e-5*
+  table5:  134e-5*  163e-5*  188e-5  74e-5*  197e-5
+  (* = discovery; values rounded to 1e-5)
+
+Paper tables (Table 1, Table 4 both columns, Table 5):
+  vs Lord.hs
+    steps compared         : 20
+    bit-identical alpha_t  : 20
+    max |alpha diff|       : 0.00000000000000E+00
+    max relative diff      : 0.00000000000000E+00
+    reject decisions differ: 0
+    Clamp_Count (total)    : 0
+    Alpha_T /= Threshold   : 0
+  vs case_study_rerun.py
+    steps compared         : 20
+    bit-identical alpha_t  : 20
+    max |alpha diff|       : 0.00000000000000E+00
+    max relative diff      : 0.00000000000000E+00
+    reject decisions differ: 0
+    Clamp_Count (total)    : 0
+    Alpha_T /= Threshold   : 0
+
+Monte Carlo (N = 2000, 100 runs, alpha = 0.05, W0 = 0.1 alpha):
+  vs Lord.hs
+    steps compared         : 200000
+    bit-identical alpha_t  : 200000
+    max |alpha diff|       : 0.00000000000000E+00
+    max relative diff      : 0.00000000000000E+00
+    reject decisions differ: 0
+    Clamp_Count (total)    : 0
+    Alpha_T /= Threshold   : 0
+  vs case_study_rerun.py
+    steps compared         : 200000
+    bit-identical alpha_t  : 148478
+    max |alpha diff|       : 8.67361737988404E-19
+    max relative diff      : 5.86244387019740E-16
+    reject decisions differ: 0
+    Clamp_Count (total)    : 0
+    Alpha_T /= Threshold   : 0
+
+Floating-point counterexample to the unclamped budget:
+  gamma_1 + gamma_2 (floating point) = 1.00000000000000E+00
+  step 2: Eq. 1 value = 2.66471115599453E-01, wealth = 2.66471115599452E-01
+  Eq. 1 value - wealth = 5.55111512312578E-17
+  Alpha_T used        = 2.66471115599452E-01 (clamped to the wealth)
+  Clamp_Count         = 1
