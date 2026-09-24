@@ -1,12 +1,12 @@
 /-
   LordFDR/Basic.lean
 
-  Core definitions for LORD++ FDR control formalization.
+  Core definitions for LORD FDR control formalization.
 
   This file establishes:
   - P-value type (real in [0,1])
   - Predictability (measurability w.r.t. prior σ-algebra)
-  - LORD++ state and threshold computation
+  - LORD state and threshold computation
 -/
 
 import Mathlib.Probability.Independence.Basic
@@ -72,9 +72,9 @@ def IsPredictableNat {m : MeasurableSpace Ω}
   -- Full predictability would require ℱ_{t-1}-measurability
   -- For now we just require measurability
 
-/-! ## LORD++ Configuration -/
+/-! ## LORD Configuration -/
 
-/-- Configuration for the LORD++ protocol -/
+/-- Configuration for the LORD protocol -/
 structure LordConfig where
   /-- Target FDR level (e.g., 0.05) -/
   alpha : ℝ
@@ -103,9 +103,9 @@ noncomputable def standardGamma (c : ℝ) (j : ℕ) : ℝ :=
   if j = 0 then 0
   else c * Real.log (max j 2) / (j * Real.exp (Real.sqrt (Real.log j)))
 
-/-! ## LORD++ State -/
+/-! ## LORD State -/
 
-/-- State of the LORD++ protocol at time t -/
+/-- State of the LORD protocol at time t -/
 structure LordState where
   /-- Current time step -/
   time : ℕ
@@ -116,7 +116,7 @@ structure LordState where
 
 namespace LordState
 
-/-- Compute the significance threshold α_t using LORD++ formula:
+/-- Compute the significance threshold α_t using LORD formula:
     α_t = γ_t · W_0 + (α - W_0) · Σ_{j: τ_j < t} γ_{t - τ_j}
 
     This is Equation (1) from the paper's Background section. -/

@@ -1,7 +1,7 @@
 /-
   LordFDR/FundamentalLemma.lean (v27)
 
-  The Fundamental Lemma for LORD++ FDR Control.
+  The Fundamental Lemma for LORD FDR Control.
 
   ## Status — FULLY PROVED (0 sorry)
   - Steps 1–5 (constant threshold): PROVED ✓
@@ -13,7 +13,7 @@
   ## Key Design Decisions
   - Steps 1–5: single [MeasurableSpace Ω], no m₀
   - Steps 6–8: section with {m₀ mΩ : MeasurableSpace Ω} (Mathlib convention)
-  - Added ε lower bound: ∀ᵐ ω, ε ≤ α ω (always holds in LORD++ where α
+  - Added ε lower bound: ∀ᵐ ω, ε ≤ α ω (always holds in LORD where α
     comes from a deterministic positive γ-sequence)
   - This makes integrability trivial: |f| ≤ 1/ε on a probability space
 -/
@@ -114,7 +114,7 @@ theorem fundamental_lemma_const
     STEPS 6–8: CONDITIONAL VERSION
 
     Variable convention: {m₀ mΩ} with mΩ last → instance synthesis picks mΩ.
-    Added hypothesis: ε lower bound on α (sufficient for LORD++).
+    Added hypothesis: ε lower bound on α (sufficient for LORD).
     ================================================================ -/
 
 section ConditionalVersion

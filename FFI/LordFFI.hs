@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
--- LordFFI: a Haskell harness that drives the GNATprove-verified LORD++
+-- LordFFI: a Haskell harness that drives the GNATprove-verified LORD
 -- wealth arithmetic directly, via the C ABI that the SPARK kernel exports.
 -- It demonstrates that the budget-critical multiplicative update can be
 -- evaluated by the proved code (Lord_Capi) rather than by a separate,

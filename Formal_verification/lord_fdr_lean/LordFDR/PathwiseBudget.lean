@@ -1,9 +1,9 @@
 /-
-  LordFDR/PathwiseBudget.lean — The pathwise budget bound for LORD++.
+  LordFDR/PathwiseBudget.lean — The pathwise budget bound for LORD.
 
   This file closes the gap left open in OnlineFDR.lean, where the budget
   hypothesis `∑ α_t ≤ q` was *assumed*. Here we *derive*, from the actual
-  LORD++ threshold formula (Equation 1, `LordState.threshold` in Basic.lean)
+  LORD threshold formula (Equation 1, `LordState.threshold` in Basic.lean)
   together with `∑ γ ≤ 1`, the pathwise inequality
 
       ∑_{t ≤ T} α_t  ≤  α · max (R, 1)
@@ -22,7 +22,7 @@ open scoped BigOperators
 
 namespace LordFDR
 
-/-- The LORD++ threshold (Equation 1) in pathwise form, parameterised by the
+/-- The LORD threshold (Equation 1) in pathwise form, parameterised by the
     finite set `D` of discovery times. This is `LordState.threshold` with the
     discovery list represented as a `Finset`:
     `α_t = γ_t · W₀ + (α − W₀) · ∑_{τ ∈ D, τ < t} γ_(t−τ)`. -/
@@ -98,8 +98,8 @@ lemma budget_arith {alpha w0 : ℝ} {R : ℕ} (hw0 : 0 < w0) (hlt : w0 < alpha) 
     rw [max_eq_left h1]
     nlinarith [h1, hw0, hlt]
 
-/-- **Pathwise budget bound for LORD++.** For any set of discovery times
-    `D ⊆ Icc 1 T`, the LORD++ thresholds over the horizon satisfy
+/-- **Pathwise budget bound for LORD.** For any set of discovery times
+    `D ⊆ Icc 1 T`, the LORD thresholds over the horizon satisfy
     `∑_{t} α_t ≤ α · max(|D|, 1)`. The budget is therefore a *consequence* of
     the threshold formula and `∑ γ ≤ 1`, not an assumption — and it holds with
     the reward term live. -/

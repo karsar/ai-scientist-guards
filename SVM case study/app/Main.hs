@@ -40,7 +40,7 @@ main = do
                 -- Pass the baseline path to the context
                 let context = CaseStudyContext llmConfig promptConfig baselineScriptPath
 
-                -- 3. Define LORD++ Configuration
+                -- 3. Define LORD Configuration
                 let targetFDR = 0.05
                 let numHypos = length hypotheses
                 let lordConfig = LordConfig {

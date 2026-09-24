@@ -1,4 +1,4 @@
---  Lord_Capi: C-ABI surface of the verified LORD++ wealth arithmetic.
+--  Lord_Capi: C-ABI surface of the verified LORD wealth arithmetic.
 --
 --  These are the budget-critical operations whose non-negativity GNATprove
 --  proves over IEEE-754 (Lord_PP). Exporting them with C convention lets the

@@ -6,11 +6,11 @@ revised paper describes:
   * each hypothesis is validated on its own DISJOINT split (H3);
   * the p-value is a paired sign-flip PERMUTATION test on held-out per-example
     losses (H1, super-uniform under the null);
-  * the p-values feed the LORD++ online-FDR procedure (Eq. 1), which makes the
+  * the p-values feed the LORD online-FDR procedure (Eq. 1), which makes the
     accept/reject decisions under a 0.05 FDR target.
 
 Produces the execution trace that replaces Table 2 (t, hypothesis, p-value,
-LORD++ threshold, decision). Deterministic given the seed.
+LORD threshold, decision). Deterministic given the seed.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ GAMMA_C = 0.0772      # normalizing constant for the standard gamma sequence
 
 
 def gamma(j: int) -> float:
-    """Standard LORD++ gamma_j = c*log(max(j,2)) / (j*exp(sqrt(log j)))."""
+    """Standard LORD gamma_j = c*log(max(j,2)) / (j*exp(sqrt(log j)))."""
     if j <= 0:
         return 0.0
     return GAMMA_C * math.log(max(j, 2)) / (j * math.exp(math.sqrt(math.log(max(j, 1)))))

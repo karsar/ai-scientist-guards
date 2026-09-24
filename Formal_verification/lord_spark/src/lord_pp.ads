@@ -1,4 +1,4 @@
---  LORD++ / Alpha-Investing Core in SPARK/Ada
+--  LORD / Alpha-Investing Core in SPARK/Ada
 --  Verifies the budget invariant (H4) over IEEE 754 arithmetic
 
 package Lord_PP

@@ -1,8 +1,8 @@
 /-
-  LordFDR/MFDR.lean — Machine-checked mFDR control for reward-bearing LORD++.
+  LordFDR/MFDR.lean — Machine-checked mFDR control for reward-bearing LORD.
 
   OnlineFDR.lean proves `FDR ≤ q` *assuming* a pathwise budget `∑ α_t ≤ q`.
-  That hypothesis is false for LORD++ once a discovery refunds wealth, so the
+  That hypothesis is false for LORD once a discovery refunds wealth, so the
   abstract theorem does not apply to the procedure the SPARK kernel runs.
 
   Here we close that gap honestly. We prove
@@ -12,7 +12,8 @@
   using the *derived* pathwise budget `∑_{t∈S} α_t ω ≤ α · max(R(ω), 1)`
   (PathwiseBudget.lean, `lordThreshold_sum_le`) instead of an assumed one.
   This is the marginal-FDR guarantee; it holds with the reward term live.
-  The stronger `FDR ≤ α` is the Ramdas et al. pen-and-paper result and is not
+  The stronger `FDR ≤ α` for this adaptive rule is the Javanmard–Montanari
+  pen-and-paper result (Annals of Statistics 2018, Theorem 3.1) and is not
   re-proved here.
 -/
 
@@ -87,22 +88,22 @@ private lemma max_sumRej_integrable
   · rw [max_eq_left (le_of_lt h)]
     linarith [sumRej_le_card (P := P) (α := α) S ω]
 
-/-- **Marginal FDR control for LORD++ (mFDR ≤ a).** Given the four structural
+/-- **Marginal FDR control for LORD (mFDR ≤ a).** Given the four structural
     conditions (via `expected_false_disc`) and the *pathwise* budget bound
     `∑_{t∈S} α_t ω ≤ a · max(R(ω), 1)` — which `lordThreshold_sum_le` supplies
-    for the real LORD++ thresholds — the expected number of false discoveries
+    for the real LORD thresholds — the expected number of false discoveries
     satisfies `E[V] ≤ a · E[max(R, 1)]`. -/
 theorem mfdr_le
     [IsProbabilityMeasure μ]
     {P α : ℕ → Ω → ℝ} {F : ℕ → MeasurableSpace Ω} {ε : ℝ}
     (hε : 0 < ε) (hF : ∀ t, F t ≤ mΩ)
     (hPm : ∀ t, @Measurable Ω ℝ mΩ _ (P t))
-    (hU : ∀ t, IsUniformPValue μ (P t))
+    (H₀ S : Finset ℕ)
+    (hU : ∀ t ∈ H₀, IsUniformPValue μ (P t))
     (hαp : ∀ t, @Measurable Ω ℝ (F t) _ (α (t + 1)))
     (hαlo : ∀ t, ∀ᵐ ω ∂μ, ε ≤ α t ω)
     (hαhi : ∀ t, ∀ᵐ ω ∂μ, α t ω ≤ 1)
-    (hI : ∀ t, IsIndepOfSubalgebra μ (P (t + 1)) (F t))
-    (H₀ S : Finset ℕ)
+    (hI : ∀ t, t + 1 ∈ H₀ → IsIndepOfSubalgebra μ (P (t + 1)) (F t))
     (hH₀ : ∀ t ∈ H₀, ∃ s, t = s + 1) (hS : ∀ t ∈ S, ∃ s, t = s + 1)
     (hH₀S : H₀ ⊆ S)
     {a : ℝ} (ha : 0 ≤ a)
@@ -126,7 +127,7 @@ theorem mfdr_le
       obtain ⟨s, hs⟩ := hS t ht; subst hs; exact hα_int s)
   have hmax_int := max_sumRej_integrable (μ := μ) (P := P) (α := α) hF hPm hαp S hS
   -- E[V] = Σ_{t∈H₀} E[α_t]
-  rw [expected_false_disc hε hF hPm hU hαp hαlo hαhi hI H₀ hH₀]
+  rw [expected_false_disc hε hF hPm H₀ hU hαp hαlo hαhi hI hH₀]
   calc ∑ t ∈ H₀, ∫ ω, α t ω ∂μ
       ≤ ∑ t ∈ S, ∫ ω, α t ω ∂μ := by
         apply Finset.sum_le_sum_of_subset_of_nonneg hH₀S
@@ -138,7 +139,7 @@ theorem mfdr_le
         integral_mono_ae hsumα_int (hmax_int.const_mul a) hpath
     _ = a * ∫ ω, max (sumRej P α S ω) 1 ∂μ := integral_mul_left a _
 
-/-- The LORD++ threshold is non-negative (used to extend a sum from `S` to a
+/-- The LORD threshold is non-negative (used to extend a sum from `S` to a
     horizon `Icc 1 T`). -/
 lemma lordThreshold_nonneg (cfg : LordConfig) (D : Finset ℕ) (t : ℕ) :
     0 ≤ lordThreshold cfg D t := by
@@ -148,7 +149,7 @@ lemma lordThreshold_nonneg (cfg : LordConfig) (D : Finset ℕ) (t : ℕ) :
     (Finset.sum_nonneg (fun τ _ => cfg.gamma_nonneg _))
 
 /-- **Discharge of the pathwise hypothesis.** For a fixed realization `ω`, if
-    the thresholds on `S` are the LORD++ thresholds of the rejections realized
+    the thresholds on `S` are the LORD thresholds of the rejections realized
     in `S`, then the pathwise budget `∑_{t∈S} α_t ω ≤ α · max(R(ω), 1)` holds —
     by `lordThreshold_sum_le`. The reward term is live; nothing is assumed about
     the wealth staying below `W₀`. -/
@@ -170,8 +171,8 @@ theorem pathwise_budget_realized
           (fun t _ _ => lordThreshold_nonneg cfg D t)
     _ ≤ cfg.alpha * max (D.card : ℝ) 1 := lordThreshold_sum_le cfg D T
 
-/-- **mFDR control for the real LORD++ procedure (capstone).** Under the four
-    structural conditions and the fact that the thresholds are the LORD++
+/-- **mFDR control for the real LORD procedure (capstone).** Under the four
+    structural conditions and the fact that the thresholds are the LORD
     thresholds of the realized rejections, the marginal FDR is controlled:
     `E[V] ≤ α · E[max(R, 1)]`. No pathwise budget is assumed — it is derived. -/
 theorem lord_mfdr
@@ -179,19 +180,19 @@ theorem lord_mfdr
     {P α : ℕ → Ω → ℝ} {F : ℕ → MeasurableSpace Ω} {ε : ℝ}
     (hε : 0 < ε) (hF : ∀ t, F t ≤ mΩ)
     (hPm : ∀ t, @Measurable Ω ℝ mΩ _ (P t))
-    (hU : ∀ t, IsUniformPValue μ (P t))
+    (H₀ S : Finset ℕ)
+    (hU : ∀ t ∈ H₀, IsUniformPValue μ (P t))
     (hαp : ∀ t, @Measurable Ω ℝ (F t) _ (α (t + 1)))
     (hαlo : ∀ t, ∀ᵐ ω ∂μ, ε ≤ α t ω)
     (hαhi : ∀ t, ∀ᵐ ω ∂μ, α t ω ≤ 1)
-    (hI : ∀ t, IsIndepOfSubalgebra μ (P (t + 1)) (F t))
-    (H₀ S : Finset ℕ)
+    (hI : ∀ t, t + 1 ∈ H₀ → IsIndepOfSubalgebra μ (P (t + 1)) (F t))
     (hH₀ : ∀ t ∈ H₀, ∃ s, t = s + 1) (hS : ∀ t ∈ S, ∃ s, t = s + 1)
     (hH₀S : H₀ ⊆ S)
     (T : ℕ) (hST : S ⊆ Finset.Icc 1 T)
     (hcons : ∀ᵐ ω ∂μ, ∀ t ∈ S, α t ω
         = lordThreshold cfg (S.filter (fun t => P t ω ≤ α t ω)) t) :
     ∫ ω, sumRej P α H₀ ω ∂μ ≤ cfg.alpha * ∫ ω, max (sumRej P α S ω) 1 ∂μ := by
-  refine mfdr_le hε hF hPm hU hαp hαlo hαhi hI H₀ S hH₀ hS hH₀S
+  refine mfdr_le hε hF hPm H₀ S hU hαp hαlo hαhi hI hH₀ hS hH₀S
     (le_of_lt cfg.alpha_pos) ?_
   filter_upwards [hcons] with ω hω
   exact pathwise_budget_realized cfg P α S ω T hST hω
