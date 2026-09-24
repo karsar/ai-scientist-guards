@@ -55,6 +55,12 @@ jobs:
 
       - name: Run GNATprove
         working-directory: Formal_verification/lord_spark
-        # --steps is deterministic (machine-independent), so proof success does
-        # not depend on the CI runner's speed, unlike a wall-clock --timeout.
-        run: alr exec -- gnatprove -P lord_spark.gpr --level=2 --steps=100000 --report=fail
+        # --steps=100000 is the prover step budget. Level 2 also sets a
+        # 5-second wall-clock limit per check, and some Lord_Eq1_Exact checks
+        # take close to that, so --timeout=60 makes the result independent of
+        # the runner's speed. A check counts as proved only if a prover proves
+        # it. --checks-as-errors=on makes the job fail on any unproved check
+        # (without it, gnatprove exits 0 even when checks are unproved).
+        run: >-
+          alr exec -- gnatprove -P lord_spark.gpr --level=2 --steps=100000
+          --timeout=60 --report=fail --checks-as-errors=on

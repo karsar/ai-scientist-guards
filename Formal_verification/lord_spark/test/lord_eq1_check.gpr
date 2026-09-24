@@ -1,0 +1,16 @@
+--  Test driver for Lord_Eq1 (not part of the proof; see run_eq1_check.sh).
+with "sparklib";
+
+project Lord_Eq1_Check is
+   for Source_Dirs use ("../src", ".");
+   for Object_Dir use "obj";
+   for Exec_Dir use "obj";
+   for Main use ("lord_eq1_check.adb");
+
+   package Compiler is
+      --  No -gnata: the contracts are proved by GNATprove. Checking them at
+      --  run time is also very slow, because the postcondition of the ghost
+      --  function Disc_Sum calls Disc_Sum again.
+      for Default_Switches ("Ada") use ("-gnat2022", "-O2");
+   end Compiler;
+end Lord_Eq1_Check;
