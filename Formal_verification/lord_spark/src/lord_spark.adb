@@ -1,11 +1,11 @@
---  LORD++ Monte Carlo Simulation Driver
+--  LORD Monte Carlo Simulation Driver
 --
 --  Compares FDR control between:
---    (1) LORD++ alpha-investing (using the SPARK-verified core)
+--    (1) LORD alpha-investing (using the SPARK-verified core)
 --    (2) Naive fixed-threshold testing (no correction)
 --
 --  Expected output (at alpha = 0.05, 10% alternative):
---    LORD++ FDR  ~  1-3%   (<= 5%)
+--    LORD   FDR  ~  1-3%   (<= 5%)
 --    Naive  FDR  ~ 40-45%  (uncontrolled)
 
 with Ada.Text_IO;           use Ada.Text_IO;
@@ -83,7 +83,7 @@ begin
    --  Seed the generator
    Ada.Numerics.Float_Random.Reset (Gen, 42);
 
-   Put_Line ("LORD++ Monte Carlo Simulation");
+   Put_Line ("LORD Monte Carlo Simulation");
    Put_Line ("========================================");
    Put ("  Hypotheses per run : ");
    Int_IO.Put (Num_Hypotheses, Width => 1); New_Line;
@@ -101,7 +101,7 @@ begin
    --  Main simulation loop
    for Rep in 1 .. Num_Replications loop
 
-      --  Initialize LORD++ state (SPARK-verified)
+      --  Initialize LORD state (SPARK-verified)
       declare
          S : Lord_PP.Protocol_State := Lord_PP.Initialize (Alpha, W0);
 
@@ -127,7 +127,7 @@ begin
             P_Value := Generate_P_Value (Is_Null);
 
             -----------------------------------------------
-            --  LORD++ test (calls SPARK-verified Advance)
+            --  LORD test (calls SPARK-verified Advance)
             -----------------------------------------------
             Lord_PP.Advance
               (S       => S,
@@ -208,7 +208,7 @@ begin
    Put_Line ("Results (averaged over "
              & Integer'Image (Num_Replications) & " replications):");
    Put_Line ("----------------------------------------");
-   Put ("  LORD++ FDR   : ");
+   Put ("  LORD   FDR   : ");
    LF_IO.Put (LORD_FDR_Sum / Long_Float (Num_Replications),
               Fore => 1, Aft => 4, Exp => 0);
    if LORD_FDR_Sum / Long_Float (Num_Replications) <= Alpha then
@@ -224,7 +224,7 @@ begin
    Put ("  [UNCONTROLLED]");
    New_Line;
 
-   Put ("  LORD++ Power : ");
+   Put ("  LORD   Power : ");
    LF_IO.Put (LORD_Power_Sum / Long_Float (Num_Replications),
               Fore => 1, Aft => 4, Exp => 0);
    New_Line;
@@ -235,7 +235,7 @@ begin
    New_Line;
 
    New_Line;
-   Put_Line ("Budget soundness (H4) of LORD++ core: verified by GNATprove.");
+   Put_Line ("Budget soundness (H4) of LORD core: verified by GNATprove.");
    Put_Line ("FDR guarantee follows by alpha-investing theorem.");
 
 end Lord_Spark;

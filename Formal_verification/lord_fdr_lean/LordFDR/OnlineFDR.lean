@@ -1,5 +1,5 @@
 /-
-  LordFDR/OnlineFDR.lean — LORD++ Online FDR Control
+  LordFDR/OnlineFDR.lean — LORD Online FDR Control
   Built on FundamentalLemma.lean (0 sorry, 660 lines).
 -/
 
@@ -78,12 +78,13 @@ theorem expected_false_disc
     {P α : ℕ → Ω → ℝ} {F : ℕ → MeasurableSpace Ω} {ε : ℝ}
     (hε : 0 < ε) (hF : ∀ t, F t ≤ mΩ)
     (hPm : ∀ t, @Measurable Ω ℝ mΩ _ (P t))
-    (hU : ∀ t, IsUniformPValue μ (P t))
+    (H₀ : Finset ℕ)
+    (hU : ∀ t ∈ H₀, IsUniformPValue μ (P t))
     (hαp : ∀ t, @Measurable Ω ℝ (F t) _ (α (t + 1)))
     (hαlo : ∀ t, ∀ᵐ ω ∂μ, ε ≤ α t ω)
     (hαhi : ∀ t, ∀ᵐ ω ∂μ, α t ω ≤ 1)
-    (hI : ∀ t, IsIndepOfSubalgebra μ (P (t + 1)) (F t))
-    (H₀ : Finset ℕ) (hH₀ : ∀ t ∈ H₀, ∃ s, t = s + 1) :
+    (hI : ∀ t, t + 1 ∈ H₀ → IsIndepOfSubalgebra μ (P (t + 1)) (F t))
+    (hH₀ : ∀ t ∈ H₀, ∃ s, t = s + 1) :
     ∫ ω, sumRej P α H₀ ω ∂μ = ∑ t ∈ H₀, ∫ ω, α t ω ∂μ := by
   have hrej_int : ∀ s, Integrable (Rej (P (s+1)) (α (s+1))) μ := by
     intro s
@@ -98,8 +99,8 @@ theorem expected_false_disc
   apply Finset.sum_congr rfl
   intro t ht
   obtain ⟨s, hs⟩ := hH₀ t ht; subst hs
-  exact expected_rejection (hF s) hε (hU (s+1)) (hPm (s+1))
-    (hαp s) (hαlo (s+1)) (hαhi (s+1)) (hI s)
+  exact expected_rejection (hF s) hε (hU (s+1) ht) (hPm (s+1))
+    (hαp s) (hαlo (s+1)) (hαhi (s+1)) (hI s ht)
 
 /-! ## Part 4: E[V] ≤ q -/
 
@@ -108,12 +109,12 @@ theorem fdr_numerator_le
     {P α : ℕ → Ω → ℝ} {F : ℕ → MeasurableSpace Ω} {ε : ℝ}
     (hε : 0 < ε) (hF : ∀ t, F t ≤ mΩ)
     (hPm : ∀ t, @Measurable Ω ℝ mΩ _ (P t))
-    (hU : ∀ t, IsUniformPValue μ (P t))
+    (H₀ S : Finset ℕ)
+    (hU : ∀ t ∈ H₀, IsUniformPValue μ (P t))
     (hαp : ∀ t, @Measurable Ω ℝ (F t) _ (α (t + 1)))
     (hαlo : ∀ t, ∀ᵐ ω ∂μ, ε ≤ α t ω)
     (hαhi : ∀ t, ∀ᵐ ω ∂μ, α t ω ≤ 1)
-    (hI : ∀ t, IsIndepOfSubalgebra μ (P (t + 1)) (F t))
-    (H₀ S : Finset ℕ)
+    (hI : ∀ t, t + 1 ∈ H₀ → IsIndepOfSubalgebra μ (P (t + 1)) (F t))
     (hH₀ : ∀ t ∈ H₀, ∃ s, t = s + 1) (hS : ∀ t ∈ S, ∃ s, t = s + 1)
     (hH₀S : H₀ ⊆ S)
     {q : ℝ} (hbudget : ∀ᵐ ω ∂μ, ∑ t ∈ S, α t ω ≤ q) :
@@ -133,7 +134,7 @@ theorem fdr_numerator_le
     calc (0 : ℝ) = ∫ _, (0 : ℝ) ∂μ := by rw [integral_zero]
       _ ≤ ∫ ω, α (s+1) ω ∂μ :=
           integral_mono_ae (integrable_const _) (hα_int s) this
-  rw [expected_false_disc hε hF hPm hU hαp hαlo hαhi hI H₀ hH₀]
+  rw [expected_false_disc hε hF hPm H₀ hU hαp hαlo hαhi hI hH₀]
   calc ∑ t ∈ H₀, ∫ ω, α t ω ∂μ
       ≤ ∑ t ∈ S, ∫ ω, α t ω ∂μ := by
         apply Finset.sum_le_sum_of_subset_of_nonneg hH₀S
@@ -150,19 +151,19 @@ theorem fdr_numerator_le
           (integrable_const _) hbudget
     _ = q := by rw [integral_const, measure_univ, ENNReal.one_toReal, one_smul]
 
-/-! ## Part 5: LORD++ FDR Theorem -/
+/-! ## Part 5: LORD FDR Theorem -/
 
 theorem lord_fdr
     [IsProbabilityMeasure μ]
     {P α : ℕ → Ω → ℝ} {F : ℕ → MeasurableSpace Ω} {ε : ℝ}
     (hε : 0 < ε) (hF : ∀ t, F t ≤ mΩ)
     (hPm : ∀ t, @Measurable Ω ℝ mΩ _ (P t))
-    (hU : ∀ t, IsUniformPValue μ (P t))
+    (H₀ S : Finset ℕ)
+    (hU : ∀ t ∈ H₀, IsUniformPValue μ (P t))
     (hαp : ∀ t, @Measurable Ω ℝ (F t) _ (α (t + 1)))
     (hαlo : ∀ t, ∀ᵐ ω ∂μ, ε ≤ α t ω)
     (hαhi : ∀ t, ∀ᵐ ω ∂μ, α t ω ≤ 1)
-    (hI : ∀ t, IsIndepOfSubalgebra μ (P (t + 1)) (F t))
-    (H₀ S : Finset ℕ)
+    (hI : ∀ t, t + 1 ∈ H₀ → IsIndepOfSubalgebra μ (P (t + 1)) (F t))
     (hH₀ : ∀ t ∈ H₀, ∃ s, t = s + 1) (hS : ∀ t ∈ S, ∃ s, t = s + 1)
     (hH₀S : H₀ ⊆ S)
     {q : ℝ} (hbudget : ∀ᵐ ω ∂μ, ∑ t ∈ S, α t ω ≤ q) :
@@ -189,6 +190,6 @@ theorem lord_fdr
         · exact hV_int
         · exact Eventually.of_forall fun ω =>
             div_le_self (sumRej_nonneg P α H₀ ω) (hmax_pos ω)
-    _ ≤ q := fdr_numerator_le hε hF hPm hU hαp hαlo hαhi hI H₀ S hH₀ hS hH₀S hbudget
+    _ ≤ q := fdr_numerator_le hε hF hPm H₀ S hU hαp hαlo hαhi hI hH₀ hS hH₀S hbudget
 
 end LordFDR.OnlineFDR

@@ -6,7 +6,7 @@ conservative on small data: with ~20-70 held-out examples per hypothesis it
 makes no discoveries, exposing the inflated p-values of the old CV t-test. This
 script shows the complementary point on a larger dataset (digits, 1797
 samples): given enough held-out data, the SAME valid pipeline (disjoint splits +
-paired permutation test + LORD++) has power---it discovers genuine improvements
+paired permutation test + LORD) has power---it discovers genuine improvements
 while correctly rejecting null hypotheses, all under a 0.05 FDR target.
 
 Five hypotheses are tested: three are real improvements over a weak baseline,

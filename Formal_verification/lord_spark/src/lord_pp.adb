@@ -1,4 +1,4 @@
---  LORD++ / Alpha-Investing Core in SPARK/Ada - Body
+--  LORD / Alpha-Investing Core in SPARK/Ada - Body
 
 package body Lord_PP
   with SPARK_Mode => On

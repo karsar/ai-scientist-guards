@@ -96,7 +96,7 @@ runValidation mcCfg simCfg lordCfg = do
         printf "Simulation Parameters: N=%d Runs=%d (Failed: %d), True Effects=%.1f%%, Power Param=%.2f\n" 
             (nHypotheses simCfg) (numRuns mcCfg) failedRuns (propTrueEffects simCfg * 100) (powerParam simCfg)
         
-        printf "\nApproach: Monadic (LORD++), Target FDR=%.3f\n" targetFDR
+        printf "\nApproach: Monadic (LORD), Target FDR=%.3f\n" targetFDR
         reportResult avgMonadicResult
 
         printf "\nApproach: Naive (Fixed Alpha=%.3f)\n" targetFDR

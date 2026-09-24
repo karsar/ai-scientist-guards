@@ -12,9 +12,9 @@
 
   The last condition is exactly what mutual independence with NON-ADAPTIVE
   thresholds provides — the regime the disjoint-split design (H3) creates. It is
-  what fails for reward-bearing LORD++, whose rewards make future thresholds
-  react to past rejections; that adaptive case keeps the cited Ramdas et al.
-  monotone-coupling proof. The argument here reuses the pathwise budget
+  what fails for reward-bearing LORD, whose rewards make future thresholds
+  react to past rejections; that adaptive case keeps the cited
+  Javanmard–Montanari result (Annals of Statistics 2018, Theorem 3.1). The argument here reuses the pathwise budget
   (PathwiseBudget) and the fundamental lemma (FundamentalLemma).
 -/
 
@@ -103,12 +103,13 @@ theorem fdr_le
     (hε : 0 < ε)
     (hGle : ∀ t, G t ≤ mΩ)
     (hPm : ∀ t, @Measurable Ω ℝ mΩ _ (P t))
-    (hU : ∀ t, IsUniformPValue μ (P t))
+    (H₀ S : Finset ℕ)
+    (hU : ∀ t ∈ H₀, IsUniformPValue μ (P t))
     (hαG : ∀ t, @Measurable Ω ℝ (G t) _ (α t))
     (hαlo : ∀ t, ∀ᵐ ω ∂μ, ε ≤ α t ω)
     (hαhi : ∀ t, ∀ᵐ ω ∂μ, α t ω ≤ 1)
-    (hI : ∀ t, IsIndepOfSubalgebra μ (P t) (G t))
-    (H₀ S : Finset ℕ) (hH₀S : H₀ ⊆ S)
+    (hI : ∀ t ∈ H₀, IsIndepOfSubalgebra μ (P t) (G t))
+    (hH₀S : H₀ ⊆ S)
     (hRerase : ∀ t ∈ H₀, @Measurable Ω ℝ (G t) _ (sumRej P α (S.erase t)))
     {a : ℝ}
     (hbudget : ∀ᵐ ω ∂μ, ∑ t ∈ S, α t ω ≤ a * max (sumRej P α S ω) 1) :
@@ -208,7 +209,7 @@ theorem fdr_le
   -- per-term: ∫ Rej_t/D = ∫ α_t * h t
   have hterm : ∀ t ∈ H₀, ∫ ω, Rej (P t) (α t) ω / D ω ∂μ = ∫ ω, α t ω * h t ω ∂μ := by
     intro t ht
-    have hcR := condexp_rej_eq (hGle t) hε (hU t) (hPm t) (hαG t) (hαlo t) (hαhi t) (hI t)
+    have hcR := condexp_rej_eq (hGle t) hε (hU t ht) (hPm t) (hαG t) (hαlo t) (hαhi t) (hI t ht)
     have hhG : @Measurable Ω ℝ (G t) _ (h t) :=
       measurable_const.div ((hRerase t ht).add measurable_const)
     have e1 : ∫ ω, Rej (P t) (α t) ω / D ω ∂μ = ∫ ω, h t ω * Rej (P t) (α t) ω ∂μ := by

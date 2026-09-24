@@ -13,7 +13,9 @@ The repository contains the Haskell `Research` monad and declarative scaffold th
 
 Machine-checked proofs. Every Lean theorem is `sorry`-free and depends only on the three standard axioms (`propext`, `Classical.choice`, `Quot.sound`).
 
-#### `lord_fdr_lean/` — LORD++ in Lean 4
+#### `lord_fdr_lean/` — LORD in Lean 4
+
+The formalized procedure is LORD (Javanmard and Montanari 2018, version 2, reward alpha - w0 per discovery).
 
 | File | Result |
 |------|--------|
@@ -55,7 +57,7 @@ All checks proved, 0 unproved, 0 `pragma Assume`: 30 for `lord_pp` (the H4 budge
 
 ### 🧮 Research_monad/  (Monte_Carlo_validation)
 
-The Haskell `Research` monad (an `ExceptT`-over-`StateT` stack) makes it impossible to test a hypothesis without updating the statistical state. The Monte Carlo driver reproduces the simulation: a naive approach inflates FDR to ~41%, LORD++ holds it at ~1.1% (N=2000).
+The Haskell `Research` monad (an `ExceptT`-over-`StateT` stack) makes it impossible to test a hypothesis without updating the statistical state. The Monte Carlo driver reproduces the simulation: a naive approach inflates FDR to ~41%, LORD holds it at ~1.1% (N=2000).
 
 ```bash
 cd Monte_Carlo_validation
@@ -81,7 +83,7 @@ python case_study_large.py         # moons: valid pipeline discovers real effect
 
 ### 🔁 FFI/
 
-A Haskell harness drives the GNATprove-verified wealth update directly via the C ABI, demonstrating that the proved arithmetic can be called from Haskell rather than re-implemented. (The simulation and case-study drivers compute thresholds with the closed-form LORD++ update in `Lord.hs`; this harness shows the verified kernel is a drop-in for the multiplicative wealth step.)
+A Haskell harness drives the GNATprove-verified wealth update directly via the C ABI, demonstrating that the proved arithmetic can be called from Haskell rather than re-implemented. (The simulation and case-study drivers compute thresholds with the closed-form LORD update in `Lord.hs`; this harness shows the verified kernel is a drop-in for the multiplicative wealth step.)
 
 ```bash
 cd FFI

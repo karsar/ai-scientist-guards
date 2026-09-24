@@ -1,5 +1,5 @@
 -- | Lord.hs
--- Implementation of the LORD++ algorithm as an instance of StatisticalProtocol.
+-- Implementation of the LORD algorithm as an instance of StatisticalProtocol.
 {-# LANGUAGE TypeFamilies #-}
 module Lord (
     LordConfig(..),
@@ -10,14 +10,14 @@ import qualified Data.Vector.Unboxed as UV
 import Protocol (StatisticalProtocol(..), ProtocolError(..))
 import Text.Printf (printf)
 
--- | Configuration for the LORD++ algorithm
+-- | Configuration for the LORD algorithm
 data LordConfig = LordConfig {
     alphaOverall :: Double, -- ^ The target FDR level (e.g., 0.05)
     w0 :: Double,           -- ^ Initial wealth (must be <= alphaOverall).
     maxHypotheses :: Int    -- ^ Maximum number of hypotheses
 } deriving (Show, Eq)
 
--- | The evolving state of the LORD++ algorithm
+-- | The evolving state of the LORD algorithm
 data LordState = LordState {
     config :: LordConfig,
     gammaSeq :: UV.Vector Double,

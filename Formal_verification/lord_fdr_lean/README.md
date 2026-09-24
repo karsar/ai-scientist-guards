@@ -1,10 +1,10 @@
-# LORD++ FDR Control Formalization in Lean 4
+# LORD FDR Control Formalization in Lean 4
 
-Formal verification of the False Discovery Rate guarantees for the LORD++ online hypothesis testing protocol.
+Formal verification of the False Discovery Rate guarantees for the online hypothesis testing protocol LORD (Javanmard and Montanari 2018, version 2, reward alpha - w0 per discovery).
 
 ## Overview
 
-This project aims to formalize the key mathematical result underlying LORD++ FDR control:
+This project aims to formalize the key mathematical result underlying LORD FDR control:
 
 **Fundamental Lemma**: For a uniform p-value P independent of filtration ℱ, and ℱ-measurable threshold α > 0:
 
